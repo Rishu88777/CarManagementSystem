@@ -52,7 +52,7 @@ Before running this project, make sure you have the following installed:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/yourusername/CarManagementSystem.git
+   git clone https://github.com/Rishu88777/CarManagementSystem
 Backend Setup:
 
 Open the project in IntelliJ IDEA or your preferred IDE.
@@ -82,6 +82,7 @@ Open your browser and go to http://localhost:8080 to interact with the frontend.
 You can add, update, view, and delete car entries.
 Search & Filter:
 Use the search bar to filter cars by name, model, year, and other properties.
+
 Contribution
 If you'd like to contribute to this project, please fork the repository, make your changes, and create a pull request. Contributions, issues, and feature requests are always welcome!
 
@@ -90,5 +91,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Contact
 Author: Rishu Kr. Shrivastava
+
 GitHub: https://github.com/Rishu88777
+
 Email: rishushrivastava264@gmail.com
