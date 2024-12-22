@@ -28,7 +28,8 @@ h1 {
 }
 
 .modal-body {
-    background-color: #f1f1f1;
+    background-color: #000000; /* Dark black background for the modal body */
+    color: white; /* White text for readability on dark background */
 }
 
 .btn-primary {
