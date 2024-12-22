@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fuelType: document.getElementById('fuelType').value
         };
 
-        fetch('https://carmanagementsystem-production-bac8.up.railway.app//api/cars', {
+        fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
