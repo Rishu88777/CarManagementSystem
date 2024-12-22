@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,28 +10,88 @@
 
     <!-- Optionally, add your custom CSS -->
     <link rel="stylesheet" href="styles.css">
-    <title>Car Management</title>
+
+    <!-- Custom JS for handling car operations -->
     <script>
+        // Function to load cars from the backend and display them in the table
         async function loadCars() {
-            const response = await fetch('/api/cars');
-            const cars = await response.json();
-            document.getElementById('cars').innerHTML = cars.map(car =>
-                `<li>${car.name} (${car.model}, ${car.year})</li>`
-            ).join('');
+            try {
+                const response = await fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars');
+                const cars = await response.json();
+                const carTableBody = document.getElementById('carTableBody');
+                carTableBody.innerHTML = ''; // Clear the table
+
+                // Loop through each car and add it to the table
+                cars.forEach(car => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${car.name}</td>
+                        <td>${car.model}</td>
+                        <td>${car.year}</td>
+                        <td>${car.price}</td>
+                        <td>${car.fuelType}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm">Edit</button>
+                            <button class="btn btn-danger btn-sm">Delete</button>
+                        </td>
+                    `;
+                    carTableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading cars:', error);
+            }
         }
 
-        window.onload = loadCars;
-    </script>
-    <script>
-        async function loadCars() {
-            const response = await fetch('/api/cars');
-            const cars = await response.json();
-            document.getElementById('cars').innerHTML = cars.map(car =>
-                `<li>${car.name} (${car.model}, ${car.year}) - ${car.color}</li>`
-            ).join('');
+        // Function to handle car form submission
+        async function handleAddCarForm(event) {
+            event.preventDefault();
+
+            // Get form values
+            const newCar = {
+                name: document.getElementById('carName').value,
+                model: document.getElementById('carModel').value,
+                year: document.getElementById('carYear').value,
+                price: document.getElementById('carPrice').value,
+                fuelType: document.getElementById('fuelType').value
+            };
+
+            try {
+                // Send new car data to the backend
+                const response = await fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newCar)
+                });
+
+                if (response.ok) {
+                    // Clear the form fields
+                    document.getElementById('carName').value = '';
+                    document.getElementById('carModel').value = '';
+                    document.getElementById('carYear').value = '';
+                    document.getElementById('carPrice').value = '';
+                    document.getElementById('fuelType').value = 'Petrol';
+
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addCarModal'));
+                    modal.hide();
+
+                    // Reload the cars in the table
+                    loadCars();
+                } else {
+                    console.error('Failed to add car');
+                }
+            } catch (error) {
+                console.error('Error adding car:', error);
+            }
         }
 
-        window.onload = loadCars;
+        // Initialize the page by loading the cars
+        window.onload = () => {
+            loadCars();
+            document.getElementById('addCarForm').addEventListener('submit', handleAddCarForm);
+        };
     </script>
 
 </head>
@@ -59,12 +119,6 @@
         </tbody>
     </table>
 </div>
-    <!-- Loader (spinner) to show during form submission -->
-<div id="loader" style="display:none;">Loading...</div>
-
-<!-- Success Message -->
-<div id="successMessage" style="display:none; color: green;">Car added successfully!</div>
-
 
 <!-- Add Car Modal -->
 <div class="modal" id="addCarModal" tabindex="-1" aria-labelledby="addCarModalLabel" aria-hidden="true">
