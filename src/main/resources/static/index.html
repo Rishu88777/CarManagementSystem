@@ -13,6 +13,8 @@
 
     <!-- Custom JS for handling car operations -->
     <script>
+        let editingCarId = null; // Variable to store the ID of the car being edited
+
         // Function to load cars from the backend and display them in the table
         async function loadCars() {
             try {
@@ -31,8 +33,8 @@
                         <td>${car.price}</td>
                         <td>${car.fuelType}</td>
                         <td>
-                            <button class="btn btn-warning btn-sm">Edit</button>
-                            <button class="btn btn-danger btn-sm">Delete</button>
+                            <button class="btn btn-warning btn-sm" onclick="editCar(${car.id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCar(${car.id})">Delete</button>
                         </td>
                     `;
                     carTableBody.appendChild(row);
@@ -42,12 +44,11 @@
             }
         }
 
-        // Function to handle car form submission
+        // Function to handle car form submission (Add or Update)
         async function handleAddCarForm(event) {
             event.preventDefault();
 
-            // Get form values
-            const newCar = {
+            const carData = {
                 name: document.getElementById('carName').value,
                 model: document.getElementById('carModel').value,
                 year: document.getElementById('carYear').value,
@@ -56,14 +57,22 @@
             };
 
             try {
-                // Send new car data to the backend
-                const response = await fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(newCar)
-                });
+                let response;
+                if (editingCarId) {
+                    // Update existing car
+                    response = await fetch(`https://carmanagementsystem-production-f868.up.railway.app/api/cars/${editingCarId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(carData)
+                    });
+                } else {
+                    // Add new car
+                    response = await fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(carData)
+                    });
+                }
 
                 if (response.ok) {
                     // Clear the form fields
@@ -79,11 +88,59 @@
 
                     // Reload the cars in the table
                     loadCars();
+
+                    // Reset editingCarId to null
+                    editingCarId = null;
                 } else {
-                    console.error('Failed to add car');
+                    console.error('Failed to add or update car');
                 }
             } catch (error) {
-                console.error('Error adding car:', error);
+                console.error('Error adding or updating car:', error);
+            }
+        }
+
+        // Function to handle editing a car
+        function editCar(id) {
+            // Fetch the car data and populate the form for editing
+            fetch(`https://carmanagementsystem-production-f868.up.railway.app/api/cars/${id}`)
+                .then(response => response.json())
+                .then(car => {
+                    document.getElementById('carName').value = car.name;
+                    document.getElementById('carModel').value = car.model;
+                    document.getElementById('carYear').value = car.year;
+                    document.getElementById('carPrice').value = car.price;
+                    document.getElementById('fuelType').value = car.fuelType;
+
+                    // Set the car id for updating later
+                    editingCarId = car.id;
+
+                    // Change the modal title to "Update Car"
+                    document.getElementById('addCarModalLabel').innerText = 'Update Car';
+
+                    // Show the modal
+                    const modal = new bootstrap.Modal(document.getElementById('addCarModal'));
+                    modal.show();
+                })
+                .catch(error => console.error('Error fetching car data for edit:', error));
+        }
+
+        // Function to handle deleting a car
+        async function deleteCar(id) {
+            if (confirm('Are you sure you want to delete this car?')) {
+                try {
+                    const response = await fetch(`https://carmanagementsystem-production-f868.up.railway.app/api/cars/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        // Reload the cars in the table
+                        loadCars();
+                    } else {
+                        console.error('Failed to delete car');
+                    }
+                } catch (error) {
+                    console.error('Error deleting car:', error);
+                }
             }
         }
 
@@ -93,7 +150,6 @@
             document.getElementById('addCarForm').addEventListener('submit', handleAddCarForm);
         };
     </script>
-
 </head>
 <body>
 <div class="container">
@@ -120,7 +176,7 @@
     </table>
 </div>
 
-<!-- Add Car Modal -->
+<!-- Add/Update Car Modal -->
 <div class="modal" id="addCarModal" tabindex="-1" aria-labelledby="addCarModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -163,7 +219,5 @@
 
 <!-- Add Bootstrap JS (necessary for modals) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Add custom JS -->
-<script src="app.js"></script>
 </body>
 </html>
