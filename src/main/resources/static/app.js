@@ -1,84 +1,132 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const carTableBody = document.getElementById('carTableBody');
-    const addCarForm = document.getElementById('addCarForm');
-    const loader = document.getElementById('loader'); // Assuming you have a loader element for showing loading state
-    const successMessage = document.getElementById('successMessage'); // Assuming you have a success message element
+let editingCarId = null; // To track the ID of the car being edited
 
-    // Fetch and display cars from the backend
-    function fetchCars() {
-        console.log("Fetching cars...");
-        fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars')
-            .then(response => response.json())
-            .then(cars => {
-                console.log("Cars fetched:", cars); // Log the fetched cars to debug
-                carTableBody.innerHTML = ''; // Clear the table before adding new data
-                cars.forEach(car => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${car.name}</td>
-                        <td>${car.model}</td>
-                        <td>${car.year}</td>
-                        <td>${car.price}</td>
-                        <td>${car.fuelType}</td>
-                        <td>
-                            <button class="btn btn-warning btn-sm">Edit</button>
-                            <button class="btn btn-danger btn-sm" data-id="${car.id}">Delete</button>
-                        </td>
-                    `;
-                    carTableBody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching cars:', error);
-            });
+// Function to load cars from the backend and display them in the table
+async function loadCars() {
+    try {
+        const response = await fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars');
+        const cars = await response.json();
+        const carTableBody = document.getElementById('carTableBody');
+        carTableBody.innerHTML = ''; // Clear existing table rows
+
+        // Populate the table with data
+        cars.forEach(car => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${car.name}</td>
+                <td>${car.model}</td>
+                <td>${car.year}</td>
+                <td>${car.price}</td>
+                <td>${car.fuelType}</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="editCar(${car.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCar(${car.id})">Delete</button>
+                </td>
+            `;
+            carTableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error loading cars:', error);
     }
+}
 
-    // Add car form submission
-    addCarForm.addEventListener('submit', (event) => {
-        event.preventDefault();
+// Function to handle Add/Update form submission
+async function handleAddCarForm(event) {
+    event.preventDefault();
 
-        // Show loader during the form submission
-        loader.style.display = 'block';
+    const carData = {
+        name: document.getElementById('carName').value,
+        model: document.getElementById('carModel').value,
+        year: document.getElementById('carYear').value,
+        price: document.getElementById('carPrice').value,
+        fuelType: document.getElementById('fuelType').value
+    };
 
-        const newCar = {
-            name: document.getElementById('carName').value,
-            model: document.getElementById('carModel').value,
-            year: document.getElementById('carYear').value,
-            price: document.getElementById('carPrice').value,
-            fuelType: document.getElementById('fuelType').value
-        };
-
-        fetch('https://carmanagementsystem-production-f868.up.railway.app/cars', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newCar)
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Car added:', data); // Log the response after the car is added
-                fetchCars(); // Re-fetch and update the table with new data
-                document.getElementById('addCarModal').classList.remove('show');
-
-                // Clear the form fields after adding a car
-                document.getElementById('carName').value = '';
-                document.getElementById('carModel').value = '';
-                document.getElementById('carYear').value = '';
-                document.getElementById('carPrice').value = '';
-                document.getElementById('fuelType').value = 'Petrol';
-
-                // Hide the loader and show the success message
-                loader.style.display = 'none';
-                successMessage.style.display = 'block';
-                setTimeout(() => successMessage.style.display = 'none', 3000); // Hide success message after 3 seconds
-            })
-            .catch(error => {
-                console.error('Error adding car:', error);
-                loader.style.display = 'none'; // Hide loader in case of error
+    try {
+        let response;
+        if (editingCarId) {
+            // Update existing car
+            response = await fetch(`https://carmanagementsystem-production-f868.up.railway.app/api/cars/${editingCarId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(carData)
             });
-    });
+        } else {
+            // Add new car
+            response = await fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(carData)
+            });
+        }
 
-    // Initial fetch to load cars into the table
-    fetchCars();
-});
+        if (response.ok) {
+            // Reset form
+            document.getElementById('addCarForm').reset();
+            document.getElementById('fuelType').value = 'Petrol';
+
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addCarModal'));
+            modal.hide();
+
+            // Reload cars in the table
+            loadCars();
+
+            // Reset editingCarId
+            editingCarId = null;
+        } else {
+            console.error('Failed to add/update car');
+        }
+    } catch (error) {
+        console.error('Error adding/updating car:', error);
+    }
+}
+
+// Function to handle editing a car
+async function editCar(id) {
+    try {
+        const response = await fetch(`https://carmanagementsystem-production-f868.up.railway.app/api/cars/${id}`);
+        const car = await response.json();
+
+        // Populate the form with car data
+        document.getElementById('carName').value = car.name;
+        document.getElementById('carModel').value = car.model;
+        document.getElementById('carYear').value = car.year;
+        document.getElementById('carPrice').value = car.price;
+        document.getElementById('fuelType').value = car.fuelType;
+
+        // Set the ID for the car being edited
+        editingCarId = car.id;
+
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('addCarModal'));
+        modal.show();
+    } catch (error) {
+        console.error('Error fetching car data for edit:', error);
+    }
+}
+
+// Function to handle deleting a car
+async function deleteCar(id) {
+    if (confirm('Are you sure you want to delete this car?')) {
+        try {
+            const response = await fetch(`https://carmanagementsystem-production-f868.up.railway.app/api/cars/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                // Reload the cars in the table
+                loadCars();
+            } else {
+                console.error('Failed to delete car');
+            }
+        } catch (error) {
+            console.error('Error deleting car:', error);
+        }
+    }
+}
+
+// Initialize the page by loading cars and setting up event listeners
+window.onload = () => {
+    loadCars();
+    document.getElementById('addCarForm').addEventListener('submit', handleAddCarForm);
+};
