@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch and display cars from the backend
     function fetchCars() {
-        fetch('http://localhost:8080/api/cars')
+        fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars')
             .then(response => response.json())
             .then(cars => {
                 carTableBody.innerHTML = '';
