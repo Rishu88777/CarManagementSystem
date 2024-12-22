@@ -6,9 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch and display cars from the backend
     function fetchCars() {
+        console.log("Fetching cars...");
         fetch('https://carmanagementsystem-production-f868.up.railway.app/api/cars')
             .then(response => response.json())
             .then(cars => {
+                console.log("Cars fetched:", cars); // Log the fetched cars to debug
                 carTableBody.innerHTML = ''; // Clear the table before adding new data
                 cars.forEach(car => {
                     const row = document.createElement('tr');
@@ -26,7 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     carTableBody.appendChild(row);
                 });
             })
-            .catch(error => console.error('Error fetching cars:', error));
+            .catch(error => {
+                console.error('Error fetching cars:', error);
+            });
     }
 
     // Add car form submission
@@ -53,9 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
         })
             .then(response => response.json())
             .then(data => {
+                console.log('Car added:', data); // Log the response after the car is added
                 fetchCars(); // Re-fetch and update the table with new data
                 document.getElementById('addCarModal').classList.remove('show');
-                
+
                 // Clear the form fields after adding a car
                 document.getElementById('carName').value = '';
                 document.getElementById('carModel').value = '';
