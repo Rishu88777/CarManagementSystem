@@ -35,3 +35,24 @@ h1 {
     background-color: #007bff;
     border-color: #007bff;
 }
+th {
+    background-color: #333; /* Dark background for table headers */
+    color: #fff; /* White text for better visibility */
+    padding: 10px; /* Add some padding for readability */
+    text-align: left; /* Align text to the left */
+    border-bottom: 2px solid #555; /* Add a border for separation */
+}
+
+td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px; /* Add space above the table */
+    background-color: #f8f8f8; /* Light background for table rows */
+}
+
